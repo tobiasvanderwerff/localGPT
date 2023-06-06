@@ -4,8 +4,9 @@ from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.llms import HuggingFacePipeline
 from constants import CHROMA_SETTINGS, PERSIST_DIRECTORY
-from transformers import LlamaTokenizer, LlamaForCausalLM, pipeline
+from transformers import LlamaTokenizer, LlamaForCausalLM, pipeline, BitsAndBytesConfig
 import click
+import torch
 
 from constants import CHROMA_SETTINGS
 
@@ -19,11 +20,13 @@ def load_model():
     model_id = "TheBloke/vicuna-7B-1.1-HF"
     tokenizer = LlamaTokenizer.from_pretrained(model_id)
 
+    quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
     model = LlamaForCausalLM.from_pretrained(model_id,
-                                             #   load_in_8bit=True, # set these options if your GPU supports them!
-                                             #   device_map=1#'auto',
-                                             #   torch_dtype=torch.float16,
-                                             #   low_cpu_mem_usage=True
+                                             quantization_config=quantization_config,
+                                               load_in_8bit=True, # set these options if your GPU supports them!
+                                               device_map='auto',
+                                               torch_dtype=torch.float16,
+                                               low_cpu_mem_usage=True
                                              )
 
     pipe = pipeline(
